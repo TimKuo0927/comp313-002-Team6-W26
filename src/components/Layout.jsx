@@ -11,7 +11,7 @@ function Layout() {
 
   return (
     <>
-      <div className="navbar">
+      <div className="navbar d-flex justify-content-between align-items-center p-3 mb-4">
         <div className="navbar-left">
           <h1>Exercise, yet?</h1>
         </div>
@@ -20,10 +20,17 @@ function Layout() {
           {/* <span>Welcome</span> */}
           <a
             className="pe-auto"
+            
+          >
+            Add Workout
+          </a>
+          <a
+            className="pe-auto"
             onClick={() => handleNavigate("/")}
           >
             Home
           </a>
+           
         </div>
       </div>
 

@@ -72,4 +72,95 @@
 
 .navbar-right a:hover {
   text-decoration: underline;
+  cursor: pointer;
 }
+
+/* Layout Styling */
+.dashboard-wrapper {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.summary-section {
+  text-align: center;
+  padding: 40px 0;
+  background: linear-gradient(180deg, #afd0e6 0%, #ffffff 100%);
+  border-radius: 15px;
+}
+
+.stat-box {
+  background: white;
+  padding: 15px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.stat-box .label { display: block; color: #666; font-size: 0.9rem; }
+.stat-box .value { font-size: 1.8rem; font-weight: 700; color: #88d4e7; }
+
+/* Column Cards */
+.workout-column-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #eee;
+  height: 100%;
+  transition: transform 0.2s ease;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.workout-column-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.card-header-custom {
+  background: #f8f9fa;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.date-badge {
+  font-weight: 600;
+  color: #555;
+  font-size: 1rem;
+}
+
+/* Exercise Rows */
+.exercise-list {
+  padding: 20px;
+}
+
+.exercise-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f9f9f9;
+}
+
+.exercise-item:last-child { border-bottom: none; }
+
+.ex-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #2d3436;
+  text-align: left;
+}
+
+.ex-muscle {
+  font-size: 0.8rem;
+  color: #888;
+  text-align: left;
+}
+
+.ex-stats {
+  background: #eefbff;
+  color: #2980b9;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+

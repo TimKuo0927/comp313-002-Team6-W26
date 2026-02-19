@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 import HomePage from './components/HomePage';
 import DemoPage from './components/DemoPage';
 import Layout from './components/Layout';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   return (

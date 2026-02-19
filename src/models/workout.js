@@ -19,7 +19,8 @@ export class Workout {
 }
 
 export class Exercise {
-  constructor(type, muscle, round, row) {
+  constructor(id,type, muscle, round, row) {
+    this.id = id;
     this.type = type;
     this.muscle = muscle;
     this.round = Number(round);
