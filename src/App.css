@@ -1,8 +1,12 @@
 #root {
-  max-width: 1280px;
+  /* max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
+  text-align: center; */
   text-align: center;
+  width: 100vw;
+  min-height: 100vh;
+  
 }
 
 .logo {
@@ -39,4 +43,33 @@
 
 .read-the-docs {
   color: #888;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between; /* left/right alignment */
+  align-items: center;
+  padding: 1rem 1rem;
+  background-color: #88d4e7;
+  color: white;
+  position: sticky; /* stays at the top when scrolling */
+  top: 0;
+  /* width: 100%; */
+  z-index: 1000;
+}
+
+.navbar-left h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.navbar-right a {
+  color: white;
+  text-decoration: none;
+  margin-left: 2rem;
+  font-weight: 500;
+}
+
+.navbar-right a:hover {
+  text-decoration: underline;
 }
