@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
-import { Workout, Exercise } from "../models/workout";
 import { Button } from "react-bootstrap";
 import { fetchExercisesByMuscle } from "../api/apiNinjas";
 
 function HomePage() {
   const [thisWeekWorkouts, setThisWeekWorkouts] = useState([]);
+  const [summary, setSummary] = useState(null);
 
-  // API NInjas Demo States
+  // API Ninjas Demo States
   const [selectedMuscle, setSelectedMuscle] = useState("biceps");
   const [apiExercises, setApiExercises] = useState([]);
   const [apiLoading, setApiLoading] = useState(false);
   const [apiError, setApiError] = useState("");
 
-async function loadExercises(muscle) {
+  async function loadExercises(muscle) {
     setApiLoading(true);
     setApiError("");
     try {
@@ -26,16 +26,7 @@ async function loadExercises(muscle) {
     }
   }
 
-
-
-  // Load data from LocalStorage on component mount
-  // useEffect(() => {
-  //   const data = localStorage.getItem('workout_logs');
-  //   if (data) setHistory(JSON.parse(data));
-  // }, []);
-
-
-  //TODO:　load the data from localStorage, filter by current week and year, and set to thisWeekWorkouts
+  // Load demo data
   useEffect(() => {
     const demoData = [
       {
@@ -44,21 +35,9 @@ async function loadExercises(muscle) {
         NumOfWeek: 8,
         Year: 2026,
         ExerciseList: [
-          {
-            id: 1,
-            type: "Incline Bench Press",
-            muscle: "Chest",
-            round: 3,
-            row: 12,
-          },
+          { id: 1, type: "Incline Bench Press", muscle: "Chest", round: 3, row: 12 },
           { id: 2, type: "Cable Fly", muscle: "Chest", round: 3, row: 15 },
-          {
-            id: 3,
-            type: "Tricep Pushdown",
-            muscle: "Triceps",
-            round: 3,
-            row: 12,
-          },
+          { id: 3, type: "Tricep Pushdown", muscle: "Triceps", round: 3, row: 12 },
         ],
       },
       {
@@ -86,26 +65,89 @@ async function loadExercises(muscle) {
     ];
 
     setThisWeekWorkouts(
-      demoData.filter((log) => log.NumOfWeek === 8 && log.Year === 2026),
+      demoData.filter((log) => log.NumOfWeek === 8 && log.Year === 2026)
     );
   }, []);
 
   const currentWeek = 8;
+
+  // 🔥 Generate Weekly Summary
+  function generateWeeklySummary() {
+    // 👉 If already open → close it
+    if (summary) {
+      setSummary(null);
+      return;
+    }
+
+    // 👉 Otherwise generate it
+    const result = {};
+
+    thisWeekWorkouts.forEach((workout) => {
+      workout.ExerciseList.forEach((ex) => {
+        const volume = ex.round * ex.row;
+
+        if (!result[ex.muscle]) {
+          result[ex.muscle] = {
+            totalVolume: 0,
+            exercises: 0,
+          };
+        }
+
+        result[ex.muscle].totalVolume += volume;
+        result[ex.muscle].exercises += 1;
+      });
+    });
+
+    setSummary(result);
+  }
+
+  // 🔥 Total weekly volume
+  const totalVolume = summary
+    ? Object.values(summary).reduce((acc, m) => acc + m.totalVolume, 0)
+    : 0;
 
   return (
     <div className="dashboard-wrapper">
       {/* Summary Header */}
       <div className="summary-section mb-5">
         <h2 className="fw-bold">Week {currentWeek} Overview</h2>
+
         <div className="d-flex justify-content-center gap-4 mt-3">
           <div className="stat-box">
             <span className="label">Sessions</span>
             <span className="value">{thisWeekWorkouts.length}</span>
           </div>
         </div>
+
+        {/* 🔥 Button */}
+        <Button
+          variant="success"
+          className="mt-3"
+          onClick={generateWeeklySummary}
+        >
+          {summary ? "Hide Weekly Summary" : "Show Weekly Summary"}
+        </Button>
+
+        {/* 🔥 Summary Display */}
+        {summary && (
+          <div className="mt-4">
+            <h4 className="fw-bold">Weekly Summary</h4>
+            <p><b>Total Volume:</b> {totalVolume}</p>
+
+            {Object.entries(summary)
+              .sort((a, b) => b[1].totalVolume - a[1].totalVolume)
+              .map(([muscle, data]) => (
+                <div key={muscle} className="mb-2">
+                  <b>{muscle}</b>
+                  <div>Total Volume: {data.totalVolume}</div>
+                  <div>Exercises Done: {data.exercises}</div>
+                </div>
+              ))}
+          </div>
+        )}
       </div>
 
-      {/* API Ninjas Demo (Temporary) */}
+      {/* API Ninjas Demo */}
       <div className="mb-5 p-3" style={{ border: "1px solid #ddd", borderRadius: 8 }}>
         <h4 className="fw-bold">API Ninjas Exercise Lookup (Demo)</h4>
 
@@ -134,17 +176,11 @@ async function loadExercises(muscle) {
           </Button>
         </div>
 
-        {apiError && (
-          <p className="mt-2" style={{ color: "red" }}>
-            {apiError}
-          </p>
-        )}
+        {apiError && <p className="mt-2 text-danger">{apiError}</p>}
 
         <div className="mt-3">
           {apiExercises.length === 0 && !apiLoading && !apiError && (
-            <p className="text-muted">
-              Click “Fetch Exercises” to load results.
-            </p>
+            <p className="text-muted">Click “Fetch Exercises” to load results.</p>
           )}
 
           <ul>
@@ -157,8 +193,7 @@ async function loadExercises(muscle) {
         </div>
       </div>
 
-
-      {/* Grid for Workout Columns */}
+      {/* Workout List */}
       <div className="g-4">
         {thisWeekWorkouts.map((log) => (
           <div key={log.id} className="row mb-4">
@@ -168,21 +203,19 @@ async function loadExercises(muscle) {
               </div>
 
               <div className="exercise-list">
-                {log.ExerciseList.map((ex, index) => (
+                {log.ExerciseList.map((ex) => (
                   <div key={ex.id} className="exercise-item">
                     <div className="ex-info">
                       <div className="ex-name">{ex.type}</div>
                       <div className="ex-muscle">{ex.muscle}</div>
                     </div>
+
                     <div className="d-flex align-items-center gap-2">
                       <div className="ex-stats">
                         {ex.round} x {ex.row}
                       </div>
-                      <Button
-                        variant="outline-secondary"
-                        size="sm"
-                        className="edit-btn"
-                      >
+
+                      <Button variant="outline-secondary" size="sm">
                         Edit
                       </Button>
                     </div>
