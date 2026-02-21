@@ -1,15 +1,39 @@
 import { useState, useEffect } from "react";
 import { Workout, Exercise } from "../models/workout";
 import { Button } from "react-bootstrap";
+import { fetchExercisesByMuscle } from "../api/apiNinjas";
 
 function HomePage() {
   const [thisWeekWorkouts, setThisWeekWorkouts] = useState([]);
+
+  // API NInjas Demo States
+  const [selectedMuscle, setSelectedMuscle] = useState("biceps");
+  const [apiExercises, setApiExercises] = useState([]);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
+
+async function loadExercises(muscle) {
+    setApiLoading(true);
+    setApiError("");
+    try {
+      const data = await fetchExercisesByMuscle(muscle);
+      setApiExercises(data);
+    } catch (e) {
+      setApiError(e?.message || "Failed to load exercises");
+      setApiExercises([]);
+    } finally {
+      setApiLoading(false);
+    }
+  }
+
+
 
   // Load data from LocalStorage on component mount
   // useEffect(() => {
   //   const data = localStorage.getItem('workout_logs');
   //   if (data) setHistory(JSON.parse(data));
   // }, []);
+
 
   //TODO:　load the data from localStorage, filter by current week and year, and set to thisWeekWorkouts
   useEffect(() => {
@@ -80,6 +104,59 @@ function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* API Ninjas Demo (Temporary) */}
+      <div className="mb-5 p-3" style={{ border: "1px solid #ddd", borderRadius: 8 }}>
+        <h4 className="fw-bold">API Ninjas Exercise Lookup (Demo)</h4>
+
+        <div className="d-flex align-items-center gap-2 mt-2">
+          <label className="fw-semibold">Muscle:</label>
+
+          <select
+            value={selectedMuscle}
+            onChange={(e) => setSelectedMuscle(e.target.value)}
+          >
+            <option value="biceps">biceps</option>
+            <option value="chest">chest</option>
+            <option value="triceps">triceps</option>
+            <option value="back">back</option>
+            <option value="quadriceps">quadriceps</option>
+            <option value="hamstrings">hamstrings</option>
+          </select>
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => loadExercises(selectedMuscle)}
+            disabled={apiLoading}
+          >
+            {apiLoading ? "Loading..." : "Fetch Exercises"}
+          </Button>
+        </div>
+
+        {apiError && (
+          <p className="mt-2" style={{ color: "red" }}>
+            {apiError}
+          </p>
+        )}
+
+        <div className="mt-3">
+          {apiExercises.length === 0 && !apiLoading && !apiError && (
+            <p className="text-muted">
+              Click “Fetch Exercises” to load results.
+            </p>
+          )}
+
+          <ul>
+            {apiExercises.map((x) => (
+              <li key={`${x.name}-${x.muscle}`}>
+                <b>{x.name}</b> — {x.difficulty} ({x.type})
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
 
       {/* Grid for Workout Columns */}
       <div className="g-4">
