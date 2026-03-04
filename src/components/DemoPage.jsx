@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Workout, Exercise } from '../models/workout';
-
-
+import { MUSCLE_LIST } from "../models/muscles";
 
 // THIS IS JUST A DEMO TO SHOW HOW TO USE THE CLASSES AND LOCAL STORAGE.
 function App() {
@@ -38,6 +37,19 @@ function App() {
       <h1>Exercise, yet?</h1>
       
       <div className="card">
+
+        <label>Select Muscle:</label>
+        <br />
+        <select style={{ marginBottom: '10px' }}>
+          {MUSCLE_LIST.map((muscle) => (
+            <option key={muscle} value={muscle}>
+              {muscle.replaceAll("_", " ")}
+            </option>
+          ))}
+        </select>
+
+        <br />
+
         <button onClick={handleLogWorkout}>
           Log Sample Workout
         </button>

@@ -20,15 +20,15 @@ function Layout() {
           {/* <span>Welcome</span> */}
           <a
             className="pe-auto"
-            
-          >
-            Add Workout
-          </a>
-          <a
-            className="pe-auto"
             onClick={() => handleNavigate("/")}
           >
             Home
+          </a>
+          <a
+            className="pe-auto"
+            onClick={() => handleNavigate("/exercise")}
+          >
+            Exercise
           </a>
            
         </div>
