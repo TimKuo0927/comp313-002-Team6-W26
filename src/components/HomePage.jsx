@@ -163,8 +163,8 @@ function HomePage() {
               </div>
 
               <div className="exercise-list">
-                {log.ExerciseList.map((ex) => (
-                  <div key={ex.id} className="exercise-item">
+                {log.ExerciseList.map((ex,index) => (
+                  <div key={index} className="exercise-item">
                     <div className="ex-info">
                       <div className="ex-name">{ex.type}</div>
                       <div className="ex-muscle">{ex.muscle}</div>

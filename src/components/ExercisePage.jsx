@@ -77,15 +77,26 @@ function ExercisePage() {
       new Exercise(index + 1, ex.name, ex.muscle, ex.rounds, ex.rows)
     );
 
-    // Create Workout object
-    const newWorkout = new Workout(exerciseList);
 
     // Get existing workouts from localStorage
     const existingData = localStorage.getItem("workout_logs");
     const workouts = existingData ? JSON.parse(existingData) : [];
 
-    // Add new workout
-    workouts.push(newWorkout);
+    //if today has already workout, append it, else create new workout
+    const now = new Date();
+    const workoutIndex = workouts.findIndex(
+      (w) => w.createDate === now.toLocaleDateString("en-US")
+    );
+
+    if (workoutIndex === -1) {
+      const newWorkout = new Workout(exerciseList);
+      workouts.push(newWorkout);
+    } else {
+      workouts[workoutIndex].ExerciseList = [
+        ...workouts[workoutIndex].ExerciseList,
+        ...exerciseList,
+      ];
+    }
 
     // Save to localStorage
     localStorage.setItem("workout_logs", JSON.stringify(workouts));
@@ -142,10 +153,10 @@ function ExercisePage() {
             <span className="date-badge">Step 2: Select Exercises</span>
           </div>
           <div className="exercise-list">
-            {availableExercises.map((exercise) => {
+            {availableExercises.map((exercise,index) => {
               const isSelected = selectedExercises.find((e) => e.name === exercise.name);
               return (
-                <div key={exercise.name} className="exercise-item">
+                <div key={index} className="exercise-item">
                   <div className="ex-info">
                     <div className="ex-name">{exercise.name}</div>
                     <div className="ex-muscle">
