@@ -174,6 +174,32 @@ function HomePage() {
     setCurrentWeekNum(0);
   };
 
+  // Connor Postma: Delete a specific workout by ID from localStorage and state
+  const handleDeleteWorkout = (workoutId) => {
+    const stored = localStorage.getItem("workout_logs");
+    if (!stored) return;
+    try {
+      const allWorkouts = JSON.parse(stored);
+      const updated = allWorkouts.filter((w) => w.id !== workoutId);
+      localStorage.setItem("workout_logs", JSON.stringify(updated));
+
+      // Refresh the displayed workouts for the current week
+      const filtered = updated.filter(
+        (w) => w.NumOfWeek === currentWeekNum && w.Year === currentYear
+      );
+      setThisWeekWorkouts(filtered);
+
+      // Refresh the week list (a week with no entries should disappear)
+      const weeks = [...new Set(updated.map((w) => w.NumOfWeek))].sort((a, b) => a - b);
+      setWeekList(weeks);
+      if (!weeks.includes(currentWeekNum)) {
+        setCurrentWeekNum(weeks.length > 0 ? weeks[weeks.length - 1] : 0);
+      }
+    } catch (err) {
+      console.error("Failed to delete workout:", err);
+    }
+  };
+
   return (
     <div className="dashboard-wrapper">
       <h1>Exercise, yet?</h1>
@@ -220,8 +246,16 @@ function HomePage() {
         {thisWeekWorkouts.map((log) => (
           <div key={log.id} className="row mb-4">
             <div className="workout-column-card col">
-              <div className="card-header-custom">
+              <div className="card-header-custom d-flex justify-content-between align-items-center">
                 <span className="date-badge">{new Date(log.createDate).toLocaleDateString()}</span>
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  onClick={() => handleDeleteWorkout(log.id)}
+                  title="Delete this workout"
+                >
+                  Delete
+                </Button>
               </div>
 
               <div className="exercise-list">
