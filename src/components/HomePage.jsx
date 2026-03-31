@@ -167,16 +167,42 @@ function HomePage() {
     console.log("Logged new workout:", newWorkout);
   };
 
-  const clearLogs = () => {
-    localStorage.removeItem("workout_logs");
-    setThisWeekWorkouts([]);
-    setWeekList([]);
-    setCurrentWeekNum(0);
+  const [editingWorkoutId, setEditingWorkoutId] = useState(null);
+
+  const toggleEditMode = (workoutId) => {
+    setEditingWorkoutId((prev) => (prev === workoutId ? null : workoutId));
+  };
+
+  const handleDeleteExercise = (workoutId, exerciseIndex) => {
+    if (!window.confirm("Delete this exercise?")) return;
+    const stored = localStorage.getItem("workout_logs");
+    if (!stored) return;
+
+    const allWorkouts = JSON.parse(stored);
+    const workoutIdx = allWorkouts.findIndex((w) => w.id === workoutId);
+    if (workoutIdx === -1) return;
+
+    allWorkouts[workoutIdx].ExerciseList.splice(exerciseIndex, 1);
+
+    if (allWorkouts[workoutIdx].ExerciseList.length === 0) {
+      allWorkouts.splice(workoutIdx, 1);
+      setEditingWorkoutId(null);
+    }
+
+    localStorage.setItem("workout_logs", JSON.stringify(allWorkouts));
+
+    const updatedWeekWorkouts = getThisWeekWorkouts(currentYear, currentWeekNum);
+    setThisWeekWorkouts(updatedWeekWorkouts);
+    getWeekList();
   };
 
   return (
     <div className="dashboard-wrapper">
       <h1>Exercise, yet?</h1>
+
+      <div className="text-start mb-3">
+        <Button onClick={handleLogSampleWorkout}>Log Sample Workout</Button>
+      </div>
 
       <div className="summary-section mb-5">
         <h2 className="fw-bold">Week {currentWeekNum} Overview</h2>
@@ -207,12 +233,6 @@ function HomePage() {
             ))}
         </div>
 
-        <div className="mt-4">
-          <Button onClick={handleLogSampleWorkout}>Log Sample Workout</Button>
-          <Button onClick={clearLogs} style={{ marginLeft: "10px", backgroundColor: "red" }}>
-            Clear All Logs
-          </Button>
-        </div>
       </div>
 
       {/* Workout List */}
@@ -220,12 +240,19 @@ function HomePage() {
         {thisWeekWorkouts.map((log) => (
           <div key={log.id} className="row mb-4">
             <div className="workout-column-card col">
-              <div className="card-header-custom">
+              <div className="card-header-custom d-flex justify-content-between align-items-center">
                 <span className="date-badge">{new Date(log.createDate).toLocaleDateString()}</span>
+                <Button
+                  size="sm"
+                  variant={editingWorkoutId === log.id ? "secondary" : "outline-primary"}
+                  onClick={() => toggleEditMode(log.id)}
+                >
+                  {editingWorkoutId === log.id ? "Done" : "Edit Day"}
+                </Button>
               </div>
 
               <div className="exercise-list">
-                {log.ExerciseList.map((ex,index) => (
+                {log.ExerciseList.map((ex, index) => (
                   <div key={index} className="exercise-item">
                     <div className="ex-info">
                       <div className="ex-name">{ex.type}</div>
@@ -236,6 +263,15 @@ function HomePage() {
                       <div className="ex-stats">
                         {ex.round} x {ex.row}
                       </div>
+                      {editingWorkoutId === log.id && (
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => handleDeleteExercise(log.id, index)}
+                        >
+                          Delete
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
