@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "react-bootstrap";
 import { Workout, Exercise } from "../models/workout";
+import { MUSCLE_LIST } from "../models/muscles";
+import { fetchExercisesByMuscle } from "../api/apiNinjas";
 
 function HomePage() {
   const [thisWeekWorkouts, setThisWeekWorkouts] = useState([]);
@@ -168,9 +170,74 @@ function HomePage() {
   };
 
   const [editingWorkoutId, setEditingWorkoutId] = useState(null);
+  const [editingExercise, setEditingExercise] = useState(null); // { workoutId, exerciseIndex }
+  const [editFields, setEditFields] = useState({ muscle: "", type: "", round: "", row: "" });
+  const [editExerciseOptions, setEditExerciseOptions] = useState([]);
+  const [editLoadingExercises, setEditLoadingExercises] = useState(false);
 
   const toggleEditMode = (workoutId) => {
     setEditingWorkoutId((prev) => (prev === workoutId ? null : workoutId));
+    setEditingExercise(null);
+    setEditExerciseOptions([]);
+  };
+
+  const startEditExercise = async (workoutId, exerciseIndex, ex) => {
+    setEditingExercise({ workoutId, exerciseIndex });
+    setEditFields({ muscle: ex.muscle, type: ex.type, round: ex.round, row: ex.row });
+    setEditLoadingExercises(true);
+    try {
+      const options = await fetchExercisesByMuscle(ex.muscle);
+      setEditExerciseOptions(options);
+      const match = options.find((o) => o.name === ex.type);
+      if (!match && options.length > 0) {
+        setEditFields((f) => ({ ...f, type: options[0].name }));
+      }
+    } catch {
+      setEditExerciseOptions([]);
+    } finally {
+      setEditLoadingExercises(false);
+    }
+  };
+
+  const handleEditMuscleChange = async (muscle) => {
+    setEditFields((f) => ({ ...f, muscle, type: "" }));
+    setEditLoadingExercises(true);
+    try {
+      const options = await fetchExercisesByMuscle(muscle);
+      setEditExerciseOptions(options);
+      if (options.length > 0) {
+        setEditFields((f) => ({ ...f, type: options[0].name }));
+      }
+    } catch {
+      setEditExerciseOptions([]);
+    } finally {
+      setEditLoadingExercises(false);
+    }
+  };
+
+  const cancelEditExercise = () => {
+    setEditingExercise(null);
+    setEditExerciseOptions([]);
+  };
+
+  const handleSaveExercise = (workoutId, exerciseIndex) => {
+    const stored = localStorage.getItem("workout_logs");
+    if (!stored) return;
+
+    const allWorkouts = JSON.parse(stored);
+    const workoutIdx = allWorkouts.findIndex((w) => w.id === workoutId);
+    if (workoutIdx === -1) return;
+
+    const target = allWorkouts[workoutIdx].ExerciseList[exerciseIndex];
+    target.muscle = editFields.muscle;
+    target.type = editFields.type || target.type;
+    target.round = Number(editFields.round);
+    target.row = Number(editFields.row);
+
+    localStorage.setItem("workout_logs", JSON.stringify(allWorkouts));
+    setThisWeekWorkouts(getThisWeekWorkouts(currentYear, currentWeekNum));
+    setEditingExercise(null);
+    setEditExerciseOptions([]);
   };
 
   const handleDeleteExercise = (workoutId, exerciseIndex) => {
@@ -252,29 +319,105 @@ function HomePage() {
               </div>
 
               <div className="exercise-list">
-                {log.ExerciseList.map((ex, index) => (
-                  <div key={index} className="exercise-item">
-                    <div className="ex-info">
-                      <div className="ex-name">{ex.type}</div>
-                      <div className="ex-muscle">{ex.muscle}</div>
-                    </div>
+                {log.ExerciseList.map((ex, index) => {
+                  const isEditingThis =
+                    editingExercise &&
+                    editingExercise.workoutId === log.id &&
+                    editingExercise.exerciseIndex === index;
 
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="ex-stats">
-                        {ex.round} x {ex.row}
-                      </div>
-                      {editingWorkoutId === log.id && (
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          onClick={() => handleDeleteExercise(log.id, index)}
-                        >
-                          Delete
-                        </Button>
+                  return (
+                    <div key={index} className="exercise-item" style={{ flexDirection: isEditingThis ? "column" : "row", alignItems: isEditingThis ? "stretch" : "center" }}>
+                      {isEditingThis ? (
+                        <div className="d-flex flex-column gap-2 w-100">
+                          <div className="d-flex gap-2">
+                            <select
+                              className="form-select form-select-sm"
+                              value={editFields.muscle}
+                              onChange={(e) => handleEditMuscleChange(e.target.value)}
+                            >
+                              {MUSCLE_LIST.map((m) => (
+                                <option key={m} value={m}>{m}</option>
+                              ))}
+                            </select>
+                            {editLoadingExercises ? (
+                              <select className="form-select form-select-sm" disabled>
+                                <option>Loading...</option>
+                              </select>
+                            ) : editExerciseOptions.length > 0 ? (
+                              <select
+                                className="form-select form-select-sm"
+                                value={editFields.type}
+                                onChange={(e) => setEditFields((f) => ({ ...f, type: e.target.value }))}
+                              >
+                                {editExerciseOptions.map((opt) => (
+                                  <option key={opt.name} value={opt.name}>{opt.name}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                className="form-control form-control-sm"
+                                value={editFields.type}
+                                onChange={(e) => setEditFields((f) => ({ ...f, type: e.target.value }))}
+                                placeholder="Exercise name"
+                              />
+                            )}
+                          </div>
+                          <div className="d-flex align-items-center gap-2">
+                            <input
+                              type="number"
+                              min="1"
+                              value={editFields.round}
+                              onChange={(e) => setEditFields((f) => ({ ...f, round: e.target.value }))}
+                              style={{ width: "65px" }}
+                              className="form-control form-control-sm"
+                              placeholder="Sets"
+                            />
+                            <span>x</span>
+                            <input
+                              type="number"
+                              min="1"
+                              value={editFields.row}
+                              onChange={(e) => setEditFields((f) => ({ ...f, row: e.target.value }))}
+                              style={{ width: "65px" }}
+                              className="form-control form-control-sm"
+                              placeholder="Reps"
+                            />
+                            <Button size="sm" variant="success" onClick={() => handleSaveExercise(log.id, index)}>Save</Button>
+                            <Button size="sm" variant="outline-secondary" onClick={cancelEditExercise}>Cancel</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="ex-info">
+                            <div className="ex-name">{ex.type}</div>
+                            <div className="ex-muscle">{ex.muscle}</div>
+                          </div>
+                          <div className="d-flex align-items-center gap-2">
+                            <div className="ex-stats">{ex.round} x {ex.row}</div>
+                            {editingWorkoutId === log.id && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline-warning"
+                                  onClick={() => startEditExercise(log.id, index, ex)}
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="danger"
+                                  onClick={() => handleDeleteExercise(log.id, index)}
+                                >
+                                  Delete
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </>
                       )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
