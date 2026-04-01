@@ -1,5 +1,5 @@
 import './App.css'
-import { BrowserRouter, Routes, Route } from 'react-router';
+import { HashRouter, Routes, Route } from 'react-router';
 import HomePage from './components/HomePage';
 import DemoPage from './components/DemoPage';
 import ExercisePage from './components/ExercisePage';
@@ -8,15 +8,15 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
-        <Route  element={<Layout />}>
-          <Route path="/" element={<HomePage />} />
+        <Route path="/"  element={<Layout />}>
+          <Route index element={<HomePage />} />
           <Route path="/demo" element={<DemoPage />} />
           <Route path="/exercise" element={<ExercisePage />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
