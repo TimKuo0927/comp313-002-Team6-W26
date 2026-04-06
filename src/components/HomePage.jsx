@@ -263,12 +263,27 @@ function HomePage() {
     getWeekList();
   };
 
+  const handleResetAllData = () => {
+    const confirmed = window.confirm("Are you sure you want to reset all workout data?");
+    if (!confirmed) return;
+
+    localStorage.removeItem("workout_logs");
+    setThisWeekWorkouts([]);
+    setSummary({});
+    setWeekList([]);
+    setCurrentWeekNum(0);
+    setEditingWorkoutId(null);
+    setEditingExercise(null);
+    setEditExerciseOptions([]);
+  };
+
   return (
     <div className="dashboard-wrapper">
       <h1>Exercise, yet?</h1>
 
       <div className="text-start mb-3">
-        <Button onClick={handleLogSampleWorkout}>Log Sample Workout</Button>
+        <Button onClick={handleLogSampleWorkout} className="me-2">Log Sample Workout</Button>
+        <Button variant="danger" onClick={handleResetAllData}>Reset All Data</Button>
       </div>
 
       <div className="summary-section mb-5">
