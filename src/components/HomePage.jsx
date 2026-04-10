@@ -26,6 +26,25 @@ async function loadExercises(muscle) {
     }
   }
 
+  // Export the workout history (local storage → JSON file)
+  function handleExportJson() {
+    const data = localStorage.getItem("workout_logs");
+
+      if (!data) {
+        alert("No workout data found to export.");
+    return;
+  }
+
+  const blob = new Blob([data], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "workout_logs.json";
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
 
 
   // Load data from LocalStorage on component mount
@@ -85,6 +104,10 @@ async function loadExercises(muscle) {
       },
     ];
 
+    // Temporary test data for export button feature
+    // localStorage.setItem("workout_logs", JSON.stringify(demoData));
+
+
     setThisWeekWorkouts(
       demoData.filter((log) => log.NumOfWeek === 8 && log.Year === 2026),
     );
@@ -103,7 +126,17 @@ async function loadExercises(muscle) {
             <span className="value">{thisWeekWorkouts.length}</span>
           </div>
         </div>
-      </div>
+
+      
+          
+      {/* Export Button */}
+    <div className="mt-3">
+
+      <Button variant="success" onClick={handleExportJson}>
+         Download Workout History
+          </Button>
+         </div>
+       </div>
 
       {/* API Ninjas Demo (Temporary) */}
       <div className="mb-5 p-3" style={{ border: "1px solid #ddd", borderRadius: 8 }}>
