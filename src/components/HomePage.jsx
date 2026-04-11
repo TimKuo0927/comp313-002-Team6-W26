@@ -39,6 +39,25 @@ function HomePage() {
     }
   };
 
+  // Export the workout history (local storage → JSON file)
+  function handleExportJson() {
+    const data = localStorage.getItem("workout_logs");
+
+      if (!data) {
+        alert("No workout data found to export.");
+    return;
+  }
+
+  const blob = new Blob([data], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "workout_logs.json";
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
   const getWeekList = () => {
     const stored = localStorage.getItem("workout_logs");
     if (!stored) return;
@@ -294,6 +313,37 @@ function HomePage() {
             <span className="label">Sessions</span>
             <span className="value">{thisWeekWorkouts.length}</span>
           </div>
+        </div>
+
+      
+          
+      {/* Export Button */}
+    <div className="mt-3">
+
+      <Button variant="success" onClick={handleExportJson}>
+         Download Workout History
+          </Button>
+         </div>
+       </div>
+
+      {/* API Ninjas Demo (Temporary) */}
+      <div className="mb-5 p-3" style={{ border: "1px solid #ddd", borderRadius: 8 }}>
+        <h4 className="fw-bold">API Ninjas Exercise Lookup (Demo)</h4>
+
+        <div className="d-flex align-items-center gap-2 mt-2">
+          <label className="fw-semibold">Muscle:</label>
+
+          <select
+            value={selectedMuscle}
+            onChange={(e) => setSelectedMuscle(e.target.value)}
+          >
+            <option value="biceps">biceps</option>
+            <option value="chest">chest</option>
+            <option value="triceps">triceps</option>
+            <option value="back">back</option>
+            <option value="quadriceps">quadriceps</option>
+            <option value="hamstrings">hamstrings</option>
+          </select>
 
           <div className="stat-box">
             <span className="label">Total Volume</span>
