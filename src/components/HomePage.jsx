@@ -112,31 +112,31 @@ function HomePage() {
   // Seed sample data into localStorage if it is empty
   useEffect(() => {
     if (!localStorage.getItem("workout_logs")) {
-      const sampleExercises = [
-        new Exercise(1, "Incline Bench Press", "chest", 3, 12),
-        new Exercise(2, "Cable Fly", "chest", 3, 15),
-        new Exercise(3, "Tricep Pushdown", "triceps", 3, 12),
-        new Exercise(4, "Lat Pulldown", "back", 4, 10),
-        new Exercise(5, "Seated Row", "back", 3, 12),
-        new Exercise(6, "Barbell Curl", "biceps", 3, 12),
-        new Exercise(7, "Hammer Curl", "biceps", 3, 12),
-        new Exercise(8, "Squats", "legs", 4, 8),
-        new Exercise(9, "Leg Press", "legs", 3, 12),
-        new Exercise(10, "Calf Raise", "calves", 4, 15),
-        new Exercise(11, "Shoulder Press", "shoulders", 3, 12),
-        new Exercise(12, "Lateral Raise", "shoulders", 3, 15),
-      ];
+      // const sampleExercises = [
+      //   new Exercise(1, "Incline Bench Press", "chest", 3, 12),
+      //   new Exercise(2, "Cable Fly", "chest", 3, 15),
+      //   new Exercise(3, "Tricep Pushdown", "triceps", 3, 12),
+      //   new Exercise(4, "Lat Pulldown", "back", 4, 10),
+      //   new Exercise(5, "Seated Row", "back", 3, 12),
+      //   new Exercise(6, "Barbell Curl", "biceps", 3, 12),
+      //   new Exercise(7, "Hammer Curl", "biceps", 3, 12),
+      //   new Exercise(8, "Squats", "legs", 4, 8),
+      //   new Exercise(9, "Leg Press", "legs", 3, 12),
+      //   new Exercise(10, "Calf Raise", "calves", 4, 15),
+      //   new Exercise(11, "Shoulder Press", "shoulders", 3, 12),
+      //   new Exercise(12, "Lateral Raise", "shoulders", 3, 15),
+      // ];
 
-      const demoData = [];
-      for (let i = 0; i < 10; i++) {
-        const workout = new Workout(sampleExercises.slice(i, i + 5));
-        workout.createDate = new Date(Date.now() - i * 86400000).toLocaleDateString("en-US");
-        workout.NumOfWeek = getWeekNumber(new Date(Date.now() - i * 86400000));
-        workout.Year = new Date(Date.now() - i * 86400000).getFullYear();
-        demoData.push(workout);
-      }
+      // const demoData = [];
+      // for (let i = 0; i < 10; i++) {
+      //   const workout = new Workout(sampleExercises.slice(i, i + 5));
+      //   workout.createDate = new Date(Date.now() - i * 86400000).toLocaleDateString("en-US");
+      //   workout.NumOfWeek = getWeekNumber(new Date(Date.now() - i * 86400000));
+      //   workout.Year = new Date(Date.now() - i * 86400000).getFullYear();
+      //   demoData.push(workout);
+      // }
 
-      localStorage.setItem("workout_logs", JSON.stringify(demoData));
+      // localStorage.setItem("workout_logs", JSON.stringify(demoData));
     }
   }, []);
 
@@ -326,31 +326,7 @@ function HomePage() {
          </div>
        </div>
 
-      {/* API Ninjas Demo (Temporary) */}
-      <div className="mb-5 p-3" style={{ border: "1px solid #ddd", borderRadius: 8 }}>
-        <h4 className="fw-bold">API Ninjas Exercise Lookup (Demo)</h4>
-
-        <div className="d-flex align-items-center gap-2 mt-2">
-          <label className="fw-semibold">Muscle:</label>
-
-          <select
-            value={selectedMuscle}
-            onChange={(e) => setSelectedMuscle(e.target.value)}
-          >
-            <option value="biceps">biceps</option>
-            <option value="chest">chest</option>
-            <option value="triceps">triceps</option>
-            <option value="back">back</option>
-            <option value="quadriceps">quadriceps</option>
-            <option value="hamstrings">hamstrings</option>
-          </select>
-
-          <div className="stat-box">
-            <span className="label">Total Volume</span>
-            <span className="value">{totalVolume}</span>
-          </div>
-        </div>
-
+      {/* <div className="mb-5 p-3" style={{ border: "1px solid #ddd", borderRadius: 8 }}>
         <div className="mt-4">
           <h4 className="fw-bold">Weekly Summary</h4>
           {Object.keys(summary).length === 0 && <p className="text-muted">No workouts logged this week.</p>}
@@ -365,7 +341,7 @@ function HomePage() {
             ))}
         </div>
 
-      </div>
+      </div> */}
 
       {/* Workout List */}
       <div className="g-4">
