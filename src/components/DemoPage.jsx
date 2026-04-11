@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Workout, Exercise } from '../models/workout';
 import { MUSCLE_LIST } from "../models/muscles";
 
-// THIS IS JUST A DEMO TO SHOW HOW TO USE THE CLASSES AND LOCAL STORAGE.
+// THIS IS JUST A DEMO TO SHOW HOW TO USE THE CLASSES AND LOCAL STORAGE
 function App() {
   const [history, setHistory] = useState([]);
 
