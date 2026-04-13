@@ -39,6 +39,32 @@ function HomePage() {
     }
   };
 
+  // Import workout history from a JSON file into localStorage
+  function handleImportJson(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target.result);
+        if (!Array.isArray(parsed)) {
+          alert("Invalid file format: expected an array of workouts.");
+          return;
+        }
+        localStorage.setItem("workout_logs", JSON.stringify(parsed));
+        getWeekList();
+        const filtered = getThisWeekWorkouts(currentYear, currentWeek);
+        setThisWeekWorkouts(filtered);
+        alert("Workout history imported successfully!");
+      } catch {
+        alert("Failed to read the file. Make sure it's a valid JSON export.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+
   // Export the workout history (local storage → JSON file)
   function handleExportJson() {
     const data = localStorage.getItem("workout_logs");
@@ -317,13 +343,21 @@ function HomePage() {
 
       
           
-      {/* Export Button */}
-    <div className="mt-3">
-
+      {/* Export / Import Buttons */}
+    <div className="mt-3 d-flex gap-2">
       <Button variant="success" onClick={handleExportJson}>
-         Download Workout History
-          </Button>
-         </div>
+        Download Workout History
+      </Button>
+      <label className="btn btn-outline-success mb-0">
+        Import Workout History
+        <input
+          type="file"
+          accept=".json"
+          style={{ display: "none" }}
+          onChange={handleImportJson}
+        />
+      </label>
+    </div>
        </div>
 
       {/* <div className="mb-5 p-3" style={{ border: "1px solid #ddd", borderRadius: 8 }}>
