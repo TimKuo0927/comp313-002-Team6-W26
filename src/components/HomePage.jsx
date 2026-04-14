@@ -8,7 +8,7 @@ function HomePage() {
   const [thisWeekWorkouts, setThisWeekWorkouts] = useState([]);
   const [summary, setSummary] = useState({});
 
-  //use to store the week list 
+  //use to store the week list
   const [weekList, setWeekList] = useState([]);
   const [currentWeekNum, setCurrentWeekNum] = useState(0);
 
@@ -31,7 +31,7 @@ function HomePage() {
     try {
       const parsed = JSON.parse(stored);
       return parsed.filter(
-        (log) => log.NumOfWeek === weekNumber && log.Year === year
+        (log) => log.NumOfWeek === weekNumber && log.Year === year,
       );
     } catch (err) {
       console.error("Failed to parse workout_logs from localStorage:", err);
@@ -47,17 +47,42 @@ function HomePage() {
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const parsed = JSON.parse(event.target.result);
-        if (!Array.isArray(parsed)) {
+        const importedData = JSON.parse(event.target.result);
+        if (!Array.isArray(importedData)) {
           alert("Invalid file format: expected an array of workouts.");
           return;
         }
-        localStorage.setItem("workout_logs", JSON.stringify(parsed));
-        getWeekList();
-        const filtered = getThisWeekWorkouts(currentYear, currentWeek);
-        setThisWeekWorkouts(filtered);
-        alert("Workout history imported successfully!");
-      } catch {
+
+        // 1. GET EXISTING DATA first to allow "adding to data"
+        const stored = localStorage.getItem("workout_logs");
+        const existingData = stored ? JSON.parse(stored) : [];
+
+        // 2. MERGE: Combine old and new data
+        // Optional: If your workouts have unique IDs, you could filter out duplicates here
+        const combinedData = [...existingData, ...importedData];
+
+        // 3. SAVE combined set back to localStorage
+        localStorage.setItem("workout_logs", JSON.stringify(combinedData));
+
+        // 4. RECALCULATE the week list so navigation buttons (← →) work
+        const allWeeks = [
+          ...new Set(combinedData.map((w) => w.NumOfWeek)),
+        ].sort((a, b) => a - b);
+        setWeekList(allWeeks);
+
+        if (allWeeks.length > 0) {
+          // 5. JUMP to the latest week in the new combined dataset
+          const latestWeek = allWeeks[allWeeks.length - 1];
+          setCurrentWeekNum(latestWeek);
+
+          // 6. RENDER the UI for that week
+          const filtered = getThisWeekWorkouts(currentYear, latestWeek);
+          setThisWeekWorkouts(filtered);
+        }
+
+        alert(`Imported ${importedData.length} workouts successfully!`);
+      } catch (err) {
+        console.error("Import Error:", err);
         alert("Failed to read the file. Make sure it's a valid JSON export.");
       }
     };
@@ -69,21 +94,21 @@ function HomePage() {
   function handleExportJson() {
     const data = localStorage.getItem("workout_logs");
 
-      if (!data) {
-        alert("No workout data found to export.");
-    return;
+    if (!data) {
+      alert("No workout data found to export.");
+      return;
+    }
+
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "workout_logs.json";
+    link.click();
+
+    URL.revokeObjectURL(url);
   }
-
-  const blob = new Blob([data], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "workout_logs.json";
-  link.click();
-
-  URL.revokeObjectURL(url);
-}
   const getWeekList = () => {
     const stored = localStorage.getItem("workout_logs");
     if (!stored) return;
@@ -91,17 +116,17 @@ function HomePage() {
     try {
       const parsed = JSON.parse(stored);
 
-      const weeks = [...new Set(parsed.map(w => w.NumOfWeek))].sort((a,b)=>a-b);
+      const weeks = [...new Set(parsed.map((w) => w.NumOfWeek))].sort(
+        (a, b) => a - b,
+      );
       setWeekList(weeks);
-      if(weeks.length>0){
+      if (weeks.length > 0) {
         // start at latest week
         setCurrentWeekNum(weeks[weeks.length - 1]);
-      }else{
+      } else {
         setCurrentWeekNum(0);
       }
-   
-
-    } catch(err){
+    } catch (err) {
       console.log(err);
     }
   };
@@ -152,7 +177,6 @@ function HomePage() {
       //   new Exercise(11, "Shoulder Press", "shoulders", 3, 12),
       //   new Exercise(12, "Lateral Raise", "shoulders", 3, 15),
       // ];
-
       // const demoData = [];
       // for (let i = 0; i < 10; i++) {
       //   const workout = new Workout(sampleExercises.slice(i, i + 5));
@@ -161,16 +185,33 @@ function HomePage() {
       //   workout.Year = new Date(Date.now() - i * 86400000).getFullYear();
       //   demoData.push(workout);
       // }
-
       // localStorage.setItem("workout_logs", JSON.stringify(demoData));
     }
   }, []);
 
   // Load workouts from localStorage on mount
   useEffect(() => {
-    const filtered = getThisWeekWorkouts(currentYear, currentWeek);
-    setThisWeekWorkouts(filtered);
-  }, [currentWeek, currentYear]);
+    const stored = localStorage.getItem("workout_logs");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        const weeks = [...new Set(parsed.map((w) => w.NumOfWeek))].sort(
+          (a, b) => a - b,
+        );
+
+        // If we have data, use the latest week from the data instead of the calendar week
+        const targetWeek =
+          weeks.length > 0 ? weeks[weeks.length - 1] : currentWeek;
+
+        const filtered = getThisWeekWorkouts(currentYear, targetWeek);
+        setThisWeekWorkouts(filtered);
+        setCurrentWeekNum(targetWeek);
+        setWeekList(weeks);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }, []); // Run once on mount
 
   //load all the weekNum from localStorage
   useEffect(() => {
@@ -195,7 +236,7 @@ function HomePage() {
 
   const totalVolume = Object.values(summary).reduce(
     (acc, m) => acc + m.totalVolume,
-    0
+    0,
   );
 
   const handleLogSampleWorkout = () => {
@@ -216,7 +257,12 @@ function HomePage() {
 
   const [editingWorkoutId, setEditingWorkoutId] = useState(null);
   const [editingExercise, setEditingExercise] = useState(null); // { workoutId, exerciseIndex }
-  const [editFields, setEditFields] = useState({ muscle: "", type: "", round: "", row: "" });
+  const [editFields, setEditFields] = useState({
+    muscle: "",
+    type: "",
+    round: "",
+    row: "",
+  });
   const [editExerciseOptions, setEditExerciseOptions] = useState([]);
   const [editLoadingExercises, setEditLoadingExercises] = useState(false);
 
@@ -228,7 +274,12 @@ function HomePage() {
 
   const startEditExercise = async (workoutId, exerciseIndex, ex) => {
     setEditingExercise({ workoutId, exerciseIndex });
-    setEditFields({ muscle: ex.muscle, type: ex.type, round: ex.round, row: ex.row });
+    setEditFields({
+      muscle: ex.muscle,
+      type: ex.type,
+      round: ex.round,
+      row: ex.row,
+    });
     setEditLoadingExercises(true);
     try {
       const options = await fetchExercisesByMuscle(ex.muscle);
@@ -303,13 +354,18 @@ function HomePage() {
 
     localStorage.setItem("workout_logs", JSON.stringify(allWorkouts));
 
-    const updatedWeekWorkouts = getThisWeekWorkouts(currentYear, currentWeekNum);
+    const updatedWeekWorkouts = getThisWeekWorkouts(
+      currentYear,
+      currentWeekNum,
+    );
     setThisWeekWorkouts(updatedWeekWorkouts);
     getWeekList();
   };
 
   const handleResetAllData = () => {
-    const confirmed = window.confirm("Are you sure you want to reset all workout data?");
+    const confirmed = window.confirm(
+      "Are you sure you want to reset all workout data?",
+    );
     if (!confirmed) return;
 
     localStorage.removeItem("workout_logs");
@@ -326,9 +382,32 @@ function HomePage() {
     <div className="dashboard-wrapper">
       <h1>Exercise, yet?</h1>
 
-      <div className="text-start mb-3">
-        <Button onClick={handleLogSampleWorkout} className="me-2">Log Sample Workout</Button>
-        <Button variant="danger" onClick={handleResetAllData}>Reset All Data</Button>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        {/* Left Side: Actions */}
+        <div className="d-flex gap-2">
+          <Button onClick={handleLogSampleWorkout} variant="primary">
+            Log Sample Workout
+          </Button>
+          <Button variant="danger" onClick={handleResetAllData}>
+            Reset All Data
+          </Button>
+        </div>
+
+        {/* Right Side: Data Management */}
+        <div className="d-flex gap-2">
+          <Button variant="success" onClick={handleExportJson}>
+            Export Workout
+          </Button>
+          <label className="btn btn-outline-success mb-0">
+            Import Workout
+            <input
+              type="file"
+              accept=".json"
+              style={{ display: "none" }}
+              onChange={handleImportJson}
+            />
+          </label>
+        </div>
       </div>
 
       <div className="summary-section mb-5">
@@ -340,25 +419,7 @@ function HomePage() {
             <span className="value">{thisWeekWorkouts.length}</span>
           </div>
         </div>
-
-      
-          
-      {/* Export / Import Buttons */}
-    <div className="mt-3 d-flex gap-2">
-      <Button variant="success" onClick={handleExportJson}>
-        Download Workout History
-      </Button>
-      <label className="btn btn-outline-success mb-0">
-        Import Workout History
-        <input
-          type="file"
-          accept=".json"
-          style={{ display: "none" }}
-          onChange={handleImportJson}
-        />
-      </label>
-    </div>
-       </div>
+      </div>
 
       {/* <div className="mb-5 p-3" style={{ border: "1px solid #ddd", borderRadius: 8 }}>
         <div className="mt-4">
@@ -383,10 +444,16 @@ function HomePage() {
           <div key={log.id} className="row mb-4">
             <div className="workout-column-card col">
               <div className="card-header-custom d-flex justify-content-between align-items-center">
-                <span className="date-badge">{new Date(log.createDate).toLocaleDateString()}</span>
+                <span className="date-badge">
+                  {new Date(log.createDate).toLocaleDateString()}
+                </span>
                 <Button
                   size="sm"
-                  variant={editingWorkoutId === log.id ? "secondary" : "outline-primary"}
+                  variant={
+                    editingWorkoutId === log.id
+                      ? "secondary"
+                      : "outline-primary"
+                  }
                   onClick={() => toggleEditMode(log.id)}
                 >
                   {editingWorkoutId === log.id ? "Done" : "Edit Day"}
@@ -401,38 +468,64 @@ function HomePage() {
                     editingExercise.exerciseIndex === index;
 
                   return (
-                    <div key={index} className="exercise-item" style={{ flexDirection: isEditingThis ? "column" : "row", alignItems: isEditingThis ? "stretch" : "center" }}>
+                    <div
+                      key={index}
+                      className="exercise-item"
+                      style={{
+                        flexDirection: isEditingThis ? "column" : "row",
+                        alignItems: isEditingThis ? "stretch" : "center",
+                      }}
+                    >
                       {isEditingThis ? (
                         <div className="d-flex flex-column gap-2 w-100">
                           <div className="d-flex gap-2">
                             <select
                               className="form-select form-select-sm"
                               value={editFields.muscle}
-                              onChange={(e) => handleEditMuscleChange(e.target.value)}
+                              onChange={(e) =>
+                                handleEditMuscleChange(e.target.value)
+                              }
                             >
                               {MUSCLE_LIST.map((m) => (
-                                <option key={m} value={m}>{m}</option>
+                                <option key={m} value={m}>
+                                  {m}
+                                </option>
                               ))}
                             </select>
                             {editLoadingExercises ? (
-                              <select className="form-select form-select-sm" disabled>
+                              <select
+                                className="form-select form-select-sm"
+                                disabled
+                              >
                                 <option>Loading...</option>
                               </select>
                             ) : editExerciseOptions.length > 0 ? (
                               <select
                                 className="form-select form-select-sm"
                                 value={editFields.type}
-                                onChange={(e) => setEditFields((f) => ({ ...f, type: e.target.value }))}
+                                onChange={(e) =>
+                                  setEditFields((f) => ({
+                                    ...f,
+                                    type: e.target.value,
+                                  }))
+                                }
                               >
                                 {editExerciseOptions.map((opt) => (
-                                  <option key={opt.name} value={opt.name}>{opt.name}</option>
+                                  <option key={opt.name} value={opt.name}>
+                                    {opt.name}
+                                  </option>
                                 ))}
                               </select>
                             ) : (
                               <input
                                 className="form-control form-control-sm"
                                 value={editFields.type}
-                                onChange={(e) => setEditFields((f) => ({ ...f, type: e.target.value }))}
+                                onChange={(e) =>
+                                  setEditFields((f) => ({
+                                    ...f,
+                                    type: e.target.value,
+                                  }))
+                                }
                                 placeholder="Exercise name"
                               />
                             )}
@@ -442,7 +535,12 @@ function HomePage() {
                               type="number"
                               min="1"
                               value={editFields.round}
-                              onChange={(e) => setEditFields((f) => ({ ...f, round: e.target.value }))}
+                              onChange={(e) =>
+                                setEditFields((f) => ({
+                                  ...f,
+                                  round: e.target.value,
+                                }))
+                              }
                               style={{ width: "65px" }}
                               className="form-control form-control-sm"
                               placeholder="Sets"
@@ -452,13 +550,30 @@ function HomePage() {
                               type="number"
                               min="1"
                               value={editFields.row}
-                              onChange={(e) => setEditFields((f) => ({ ...f, row: e.target.value }))}
+                              onChange={(e) =>
+                                setEditFields((f) => ({
+                                  ...f,
+                                  row: e.target.value,
+                                }))
+                              }
                               style={{ width: "65px" }}
                               className="form-control form-control-sm"
                               placeholder="Reps"
                             />
-                            <Button size="sm" variant="success" onClick={() => handleSaveExercise(log.id, index)}>Save</Button>
-                            <Button size="sm" variant="outline-secondary" onClick={cancelEditExercise}>Cancel</Button>
+                            <Button
+                              size="sm"
+                              variant="success"
+                              onClick={() => handleSaveExercise(log.id, index)}
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline-secondary"
+                              onClick={cancelEditExercise}
+                            >
+                              Cancel
+                            </Button>
                           </div>
                         </div>
                       ) : (
@@ -468,20 +583,26 @@ function HomePage() {
                             <div className="ex-muscle">{ex.muscle}</div>
                           </div>
                           <div className="d-flex align-items-center gap-2">
-                            <div className="ex-stats">{ex.round} x {ex.row}</div>
+                            <div className="ex-stats">
+                              {ex.round} x {ex.row}
+                            </div>
                             {editingWorkoutId === log.id && (
                               <>
                                 <Button
                                   size="sm"
                                   variant="outline-warning"
-                                  onClick={() => startEditExercise(log.id, index, ex)}
+                                  onClick={() =>
+                                    startEditExercise(log.id, index, ex)
+                                  }
                                 >
                                   Edit
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="danger"
-                                  onClick={() => handleDeleteExercise(log.id, index)}
+                                  onClick={() =>
+                                    handleDeleteExercise(log.id, index)
+                                  }
                                 >
                                   Delete
                                 </Button>
